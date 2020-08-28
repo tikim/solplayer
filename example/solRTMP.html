@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>solRTMP Test Platform</title>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
+    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
+    <link rel="stylesheet" href="jquery.jsonPresenter.css">
+    <script src="jquery.jsonPresenter.js"></script>
+
+</head>
+<body>
+<div class="container">
+    <div class="row col-md-12"><h1>&nbsp;&nbsp;solRTMP Test Platform</h1><hr class="soften"></hr></div>
+    <div class="row col-md-12">
+          <div class="input-group ns-range-input">
+              <span class="input-group-addon">채널 대상 선택</span>
+              <select class="selectpicker" data-width="auto" id="chs" onchange="javascript:changeChannelTarget()">
+                  <option value="tvchosun_1080p_ts.ch" selected>tvchosun_1080p_ts</option>
+                  <option value="tvchosun_1080p_fmp4.ch">tvchosun_1080p_fmp4</option>
+                  <option value="tvchosun_720p_ts.ch">tvchosun_720p_ts</option>
+                  <option value="tvchosun_720p_fmp4.ch">tvchosun_720p_fmp4</option>
+                  <option value="tvchosun_adaptive.grp">tvchosun_adaptive</option>
+                  <option value="solbox_1080p.ch">solbox_1080p</option>
+                  <option value="solbox_720p.ch">solbox_720p</option>
+                  <option value="solbox_360p.ch">solbox_360p</option>
+                  <option value="solbox_audio.ch">solbox_audio</option>
+                  <option value="solbox_abr.grp">solbox_abr</option>
+                  <option value="">=== 이하 VOD ===</option>
+                  <option value="hevc.ch">hevc</option>
+                  <option value="asahi.ch">asahi</option>
+                  <option value="lateroom.ch">lateroom</option>
+                  <option value="copyright.ch">copyright</option>
+                  <option value="">=== 이하 테스트 ===</option>
+                  <option value="udp.json">udp</option>
+                  <option value="rtp.json">rtp</option>
+                  <option value="debug.json">debug</option>
+                  <option value="schedule.ch">schedule</option>
+                  <option value="livetest.ch">livetest</option>
+                  <option value="manual">수동</option>
+              </select>
+            </div>
+            <div class="input-group ns-range-input">
+              <span class="input-group-addon">채널 JSON 파일</span>
+              <input id="ch_json" type="text" class="form-control" onchange="javascript:changeChannelTarget()"/>
+              <span class="input-group-addon">채널 ID</span>
+              <input id="ch_id" type="text" class="form-control" onchange="javascript:changeChannelTarget()"/>
+          </div>
+          <br><br>
+          <div class="input-group ns-range-input">
+              <span class="input-group-addon">스케쥴 대상 선택</span>
+              <select class="selectpicker" data-width="auto" id="schs" onchange="javascript:changeScheduleTarget()">
+                  <option value="manual">수동</option>
+              </select>
+            </div>
+          <div class="input-group ns-range-input">
+            <span class="input-group-addon">스케쥴 JSON 파일</span>
+            <input id="sch_json" type="text" class="form-control" onchange="javascript:changeScheduleTarget()"/>
+            <span class="input-group-addon">스케쥴 ID</span>
+            <input id="sch_id" type="text" class="form-control" onchange="javascript:changeScheduleTarget()"/>
+        </div>
+          <div class="row col-md-12"><hr class="soften"/></div>
+        <div class="input-group">
+          <h4><span class="text-info">solRTMP /webAPI</span></h4>
+          <span class="input-group-btn">
+
+              <button class="btn btn-primary" type="button" onclick="javascript:loadTest(true)">로드 테스트</button>
+              <button class="btn btn-primary" type="button" onclick="javascript:callWebApi('ch_add')">채널 추가(ch_add)</button>
+              <button class="btn btn-primary" type="button" onclick="javascript:callWebApi('ch_del')">채널 삭제(ch_del)</button>
+              <button class="btn btn-primary" type="button" onclick="javascript:callWebApi('ch_info')">채널 정보(ch_info)</button>
+              <button class="btn btn-primary" type="button" onclick="javascript:callWebApi('ch_all_info')">모든 채널 정보(ch_all_info)</button>
+              <button class="btn btn-primary" type="button" onclick="javascript:callWebApi('status_info')">상태 정보(status_info)</button>
+              <button class="btn btn-primary" type="button" onclick="javascript:callWebApi('ch_force_on')">채널 강제 응답 On</button>
+              <button class="btn btn-primary" type="button" onclick="javascript:callWebApi('ch_force_off')">채널 강제 응답 Off</button>
+          </span>
+        </div>
+        <div class="input-group">
+            <h4>&nbsp;</h4>
+            <span class="input-group-btn">
+                <button class="btn btn-primary" type="button" onclick="javascript:callWebApi('group_add')">채널 그룹 추가(group_add)</button>
+                <button class="btn btn-primary" type="button" onclick="javascript:callWebApi('group_del')">채널 그룹 삭제(group_del)</button>
+                <button class="btn btn-primary" type="button" onclick="javascript:callWebApi('group_info')">채널 그룹 정보(group_info)</button>
+                <button class="btn btn-primary" type="button" onclick="javascript:callWebApi('group_all_info')">모든 채널 그룹 정보(group_all_info)</button>
+                <button class="btn btn-primary" type="button" onclick="javascript:callWebApi('grp_force_on')">그룹 강제 응답 On</button>
+                <button class="btn btn-primary" type="button" onclick="javascript:callWebApi('grp_force_off')">그룹 강제 응답 Off</button>
+            </span>
+        </div>
+        <div class="input-group">
+            <h4>&nbsp;</h4>
+            <span class="input-group-btn">
+                <button class="btn btn-primary" type="button" onclick="javascript:callWebApi('schedule_add')">스케쥴 추가</button>
+                <button class="btn btn-primary" type="button" onclick="javascript:callWebApi('schedule_del')">스케쥴 삭제</button>
+            </span>
+        </div>
+    </div>
+    <div class="row col-md-12"><hr class="soften"/></div>
+    <div class="row col-md-12 card">
+        <div class="card-header text-primary">
+            <div class="input-group">
+            응답 코드
+            <span class="input-group-btn">
+                <button class="btn btn-primary" type="button" onclick="javascript:$('#response').jsonPresenter('expandAll');">모두 열기</button>
+                <button class="btn btn-primary" type="button" onclick="javascript:$('#response').jsonPresenter('expand', 0);">모두 닫기</button>
+            </span>
+            </div>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title" id="response"></h5>
+        </div>
+    </div>
+</div>
+<br/><br/><br/>
+<script>
+
+    var ch_id = "tvchosun";
+    var ch_file = "tvchosun.json";
+    var sch_id = "";
+    var sch_file = "";
+
+    var chAllInfoQuery = {
+
+        "server_id": "dev_1",
+        "command": "ch_all_info",
+    };
+
+    var chForceQuery = {
+
+      "server_id": "dev_1",
+      "command": "ch_force_status",
+      "ch_id" : ch_id,
+      "error_response" : false,
+    };
+
+
+    var grpForceQuery = {
+
+      "server_id": "dev_1",
+      "command": "grp_force_status",
+      "group_id" : ch_id,
+      "error_response" : false,
+    };
+
+    var statusInfoQuery = {
+
+        "server_id": "dev_1",
+        "command": "status_info",
+
+    };
+
+    var chDelQuery  = {
+
+        "server_id": "dev_1",
+        "command": "ch_del",
+        "ch_id" : ch_id,
+    };
+
+    var chInfoQuery  = {
+
+        "server_id": "dev_1",
+        "command": "ch_info",
+        "ch_id" : ch_id,
+    };
+
+    var chAddQuery = {
+
+        "server_id": "dev_1",
+        "command": "ch_add",
+    };
+
+    var grpAddQuery = {
+
+        "server_id": "dev_1",
+        "command": "group_add",
+    };
+
+    var grpDelQuery  = {
+
+        "server_id": "dev_1",
+        "command": "group_del",
+        "group_id" : ch_id,
+    };
+
+    var grpInfoQuery  = {
+
+        "server_id": "dev_1",
+        "command": "group_info",
+        "group_id" : ch_id,
+    };
+
+    var grpAllInfoQuery = {
+
+        "server_id": "dev_1",
+        "command": "group_all_info",
+    };
+
+    var schAddQuery = {
+
+        "server_id": "dev_1",
+        "command": "schedule_add",
+        "ch_id" : ch_id,
+    };
+
+    var schDelQuery  = {
+
+        "server_id": "dev_1",
+        "command": "schedule_del",
+        "ch_id" : ch_id,
+        "schedule" : {
+
+            "list" : [
+
+                ""
+            ]
+        }
+    };
+
+    var lt = false;
+    var ltc;
+
+    function loadTest(start) {
+
+        if(start) {
+            lt = true;
+            ltc = 0;
+            callWebApi('ch_add');
+
+        } else if(lt) {
+
+            ltc++;
+
+            //window.setTimeout(function () {
+
+                switch(ltc % 3) {
+
+                    case 0:
+                        callWebApi('ch_add');
+                        break;
+
+                    case 1:
+                        callWebApi('ch_del');
+                        break;
+
+                    case 2:
+                        callWebApi('status_info');
+                        break;
+
+                }
+
+            //}, 1);
+        }
+    }
+
+    function callWebApi(cmd, url) {
+
+        if(url == undefined) {
+
+            url = "http://localhost:9080/webAPI";
+        }
+
+        if(cmd == "ch_add") {
+
+            sendWebApiCall(url, chAddQuery, "http://localhost:8080/solRTMP/conf/"+ch_file, "channel");
+
+        } else if(cmd == "ch_del") {
+
+            chDelQuery["ch_id"] = ch_id;
+            sendWebApiCall(url, chDelQuery);
+
+        } else if(cmd == "ch_info") {
+
+            chInfoQuery["ch_id"] = ch_id;
+            sendWebApiCall(url, chInfoQuery);
+
+        } else if(cmd == "ch_all_info") {
+
+            sendWebApiCall(url, chAllInfoQuery);
+
+        } else if(cmd == "status_info") {
+
+            sendWebApiCall(url, statusInfoQuery);
+
+        } else if(cmd == "ch_force_on") {
+
+            chForceQuery["ch_id"] = ch_id;
+            chForceQuery["error_response"] = true;
+            sendWebApiCall(url, chForceQuery);
+
+        } else if(cmd == "ch_force_off") {
+
+            chForceQuery["ch_id"] = ch_id;
+            chForceQuery["error_response"] = false;
+            sendWebApiCall(url, chForceQuery);
+
+          } else if(cmd == "grp_force_on") {
+
+              grpForceQuery["group_id"] = ch_id;
+              grpForceQuery["error_response"] = true;
+              sendWebApiCall(url, grpForceQuery);
+
+          } else if(cmd == "grp_force_off") {
+
+              grpForceQuery["group_id"] = ch_id;
+              grpForceQuery["error_response"] = false;
+              sendWebApiCall(url, grpForceQuery);
+
+        } else if(cmd == "group_add") {
+
+            sendWebApiCall(url, grpAddQuery, "http://localhost:8080/solRTMP/conf/"+ch_file, "group");
+
+        } else if(cmd == "group_del") {
+
+            grpDelQuery["group_id"] = ch_id;
+            sendWebApiCall(url, grpDelQuery);
+
+        } else if(cmd == "group_info") {
+
+            grpInfoQuery["group_id"] = ch_id;
+            sendWebApiCall(url, grpInfoQuery);
+
+        } else if(cmd == "group_all_info") {
+
+            sendWebApiCall(url, grpAllInfoQuery);
+
+        } else if(cmd == "schedule_add") {
+
+            schAddQuery["ch_id"] = ch_id;
+            sendWebApiCall(url, schAddQuery, "http://localhost:8080/solRTMP/conf/"+sch_file, "schedule");
+
+        } else if(cmd == "schedule_del") {
+
+            schDelQuery["ch_id"] = ch_id;
+            schDelQuery["schedule"]["list"][0] = { "id" : sch_id }
+            sendWebApiCall(url, schDelQuery);
+        }
+    }
+
+    function sendWebApiCall(url, query, chcfg, objtag) {
+
+		    var xhr = new XMLHttpRequest();   // new HttpRequest instance
+
+        xhr.onload = function(e) {
+
+            if(Math.floor(e.currentTarget.status / 100) == 2) {
+
+                var j = JSON.parse(e.currentTarget.responseText);
+                if(j) {
+
+                    $('#response').jsonPresenter({json: j,});
+                    $('#response').jsonPresenter('expand', 0);
+
+                    loadTest(false);
+                }
+
+            } else {
+
+                alert('서버 응답 거부: ' + e.currentTarget.status);
+            }
+        };
+
+        xhr.onerror = function(e) {
+
+            alert('서버 연결 실패');
+        };
+
+  		xhr.open("POST", url);
+  		xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+
+  		if(chcfg != undefined) {
+
+              var cfgxhr = new XMLHttpRequest();
+
+              cfgxhr.onload = function(e) {
+
+                query[objtag] = JSON.parse(e.currentTarget.responseText);
+  				      xhr.send(JSON.stringify(query));
+  			}
+
+  			cfgxhr.onerror = function(e) {
+
+  				alert('Config 파일 로드 실패');
+  			}
+
+  			cfgxhr.open("GET", chcfg + "?t=" + Date.now());
+  			cfgxhr.send();
+
+
+  		} else {
+
+  	        xhr.send(JSON.stringify(query));
+  		}
+    }
+
+    function changeChannelTarget()
+    {
+      var test = document.getElementById('chs');
+
+      if(test.options[test.selectedIndex].value == 'manual') {
+
+        ch_id = document.getElementById('ch_id').value;
+        ch_file = document.getElementById('ch_json').value;
+
+      } else {
+
+        ch_id = test.options[test.selectedIndex].text;
+        ch_file = test.options[test.selectedIndex].value;
+      }
+    }
+
+
+    function changeScheduleTarget()
+    {
+      var test = document.getElementById('schs');
+
+      if(test.options[test.selectedIndex].value == 'manual') {
+
+        sch_id = document.getElementById('sch_id').value;
+        sch_file = document.getElementById('sch_json').value;
+
+      } else {
+
+        sch_id = test.options[test.selectedIndex].text;
+        sch_file = test.options[test.selectedIndex].value;
+      }
+    }
+
+    changeChannelTarget();
+    changeScheduleTarget();
+
+</script>
+</body>
+</html>

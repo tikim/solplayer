@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SolPlayer Test Platform</title>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
+    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
+
+</head>
+<body>
+
+<!--SBPlayer 자바 스크립트 파일-->
+<!--디버깅/개발 버전인 경우-->
+
+<!--외부 라이브러리-->
+<script type="text/javascript" src="../js/import/text-encoding/encoding-indexes.js"></script>
+<script type="text/javascript" src="../js/import/text-encoding/encoding.js"></script>
+<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/e9d941381475b5df8b7d7691013401e171014e89/FileSaver.min.js"></script>
+<script type="text/javascript" src="../js/common/logger.js"></script>
+<script type="text/javascript" src="../js/common/error.js"></script>
+<script type="text/javascript" src="../js/common/util.js"></script>
+<script type="text/javascript" src="../js/common/event.js"></script>
+<script type="text/javascript" src="../js/common/http.js"></script>
+<script type="text/javascript" src="../js/common/bitread.js"></script>
+<script type="text/javascript" src="../js/media/avc.js"></script>
+<script type="text/javascript" src="../js/media/mpa.js"></script>
+<script type="text/javascript" src="../js/media/def.js"></script>
+<script type="text/javascript" src="../js/media/src.js"></script>
+<script type="text/javascript" src="../js/input/hls.js"></script>
+<script type="text/javascript" src="../js/input/wrtp.js"></script>
+<script type="text/javascript" src="../js/sbp.js"></script>
+
+<!--릴리즈 버전인 경우-->
+<!--<script type="text/javascript" src="../js/sbp.min.js"></script>-->
+
+<!--사용 예-->
+<div class="container">
+    <div class="row col-md-12"><h1>&nbsp;&nbsp;SolPlayer Test Platform</h1>
+        <hr class="soften"/></div>
+    <div class="row col-md-12"><video id="v" controls width="960" height="540" style="background: black;"> </video></div>
+    <div class="row col-md-12"><hr class="soften"/></div>
+
+    <div class="row col-md-12">
+        <div class="input-group ns-range-input">
+            <span class="input-group-addon">라이브 딜레이</span>
+            <select class="selectpicker" data-width="auto" id="delay">
+                <option value="normal" selected>normal</option>
+                <option value="minimum">minimum</option>
+                <option value="extreme">extreme</option>
+            </select>
+            <span class="input-group-addon">수신레이트 컨트롤</span>
+            <select class="selectpicker" data-width="auto" id="brate">
+                <option value="0">무제한</option>
+                <option value="3" selected>3초</option>
+                <option value="10">10초</option>
+                <option value="30">30초</option>
+                <option value="60">1분</option>
+            </select>
+            <span class="input-group-addon">라이브 재게 방식</span>
+            <select class="selectpicker" data-width="auto" id="liveResume">
+                <option value="continue">계속 진행</option>
+                <option value="restart">재시작</option>
+            </select>
+            <span class="input-group-addon">서브스트림</span>
+            <select class="selectpicker" data-width="auto" id="subStreams">
+            </select>
+        </div>
+    </div>
+    <div class="row col-md-12"><hr class="soften"/></div>
+    <div class="row col-md-12">
+        <div class="input-group">
+            <input id="SUrl" type="text" class="form-control" placeholder="Stream URL" aria-label="Stream URL">
+            <span class="input-group-btn">
+                <button class="btn btn-primary" type="button" onclick="javascript:play()"><span class="glyphicon glyphicon-play"></span></button>
+                <button class="btn btn-primary" type="button" onclick="javascript:play('http://192.168.130.157:1935/abr/_definst_/live.smil/playlist.m3u8')">기본 라이브</button>
+                <button class="btn btn-primary" type="button" onclick="javascript:play('http://192.168.130.157:1935/vod/_definst_/vod.smil/playlist.m3u8')">기본 VOD</button>
+            </span>
+        </div>
+    </div>
+    <div class="row col-md-12"><hr class="soften"/></div>
+    <div class="row col-md-12">
+        <ul class="nav nav-tabs">
+            <li><a data-toggle="tab" href="#metaEvent">ID3 Event</a></li>
+            <li class="active"><a data-toggle="tab" href="#playerStat">MSE Stat</a></li>
+            <li><a data-toggle="tab" href="#netStat">Network Stat</a></li>
+        </ul>
+        <br>
+        <div class="tab-content">
+            <div id="metaEvent" class="tab-pane fade">
+                <div class="card">
+                    <div class="card-header text-primary">ID3 코드</div>
+                    <div class="card-body">
+                        <h5 class="card-title" id="ID3"></h5>
+                    </div>
+                </div>
+            </div>
+            <div id="playerStat" class="tab-pane fade in active">
+                <div class="card">
+                    <div class="card-header text-primary">경과 시간 비교</div>
+                    <div class="card-body">
+                        <h5 class="card-title" id="Elapse">&nbsp;</h5>
+                    </div>
+                    <div class="card-header text-primary">버퍼 상태&nbsp;<span class="text-info">(버퍼링 여유: <span id="frontBuffer">0</span>초)</span></div>
+                    <div class="card-body">
+                        <p/>
+                        <div class="card progress" id="BufProg"></div>
+                        <h5 class="card-title" id="Buffered">&nbsp;</h5>
+                    </div>
+                </div>
+            </div>
+            <div id="netStat" class="tab-pane fade">
+                <div class="card">
+                    <div class="card-body"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<br/><br/><br/>
+<script>
+
+    // SBPlayer 생성 및 옵션 설정
+    var sbp = new SBPlayer(document.getElementById('v'), {
+
+            input: SBPInputType.hls,
+            logLevel: SBPLogLevel.all,
+            logSection : SBPLogSection.engine | SBPLogSection.playback | SBPLogSection.input,
+        });
+
+
+    sbp.addEventListener("onMeta", function(e) {
+
+        if(e.data.data == undefined || e.data.type.desc != "id3") return;
+
+        var frames = e.data.data;
+        var id3 = document.getElementById('ID3');
+        var printOut = "";
+
+        for(var i = 0; i <frames.length; i++) {
+
+            printOut = printOut + "ID3 Frame:" + frames[i].frame + ", Data: " + frames[i].data + "\n";
+        }
+
+        id3.innerText = printOut;
+    });
+
+    var listup = false;
+
+    sbp.addEventListener("onAdaptiveList", function(e) {
+
+        var i;
+        if(!sbp.streams || sbp.streams.length < 1) return;
+
+        var sss = $("#subStreams");
+
+        sss.find("option").remove();
+        listup = true;
+
+        for(i = 0; i < sbp.streams.length; i++) {
+
+            var opt = document.createElement('option');
+
+            opt.value = i;
+            opt.text = SBPlayer.nameOfStream(sbp.streams[i]);
+
+            sss.append(opt);
+            if(sbp.streams[i].active) sss.selectpicker('val', i);
+        }
+
+        sss.on('change', function(e) {
+
+            if(listup) return;
+
+            var strms = sbp.streams;
+            if(!strms || strms.length < 2) return;
+
+            sbp.switch(document.getElementById('subStreams').selectedIndex);
+        });
+
+        sss.selectpicker('refresh');
+        listup = false;
+    });
+
+    window.setInterval(function() {
+
+        var s = sbp.status;
+
+        var elapse = document.getElementById('Elapse');
+        var buffered = document.getElementById('Buffered');
+        var bufprog = document.getElementById('BufProg');
+        var frontBuf = document.getElementById('frontBuffer');
+
+        if(s == null) {
+
+            while(bufprog.firstChild) {
+                bufprog.removeChild(bufprog.firstChild);
+            }
+
+            elapse.innerHTML = "";
+            buffered.innerHTML = "";
+            frontBuf.innerText = "0";
+
+        } else {
+
+            var elapse = document.getElementById('Elapse');
+            var buffered = document.getElementById('Buffered');
+            var bufprog = document.getElementById('BufProg');
+            var frontBuf = document.getElementById('frontBuffer');
+            var bpw = bufprog.offsetWidth;
+            var bph = bufprog.offsetHeight;
+            var bpx = bufprog.offsetLeft;
+            var bpy = bufprog.offsetTop;
+            var ms = 0, me = 0;
+
+            while(bufprog.firstChild) {
+                bufprog.removeChild(bufprog.firstChild);
+            }
+
+            elapse.innerHTML = "시스템: " + s.elapse.sys + "초, 비디오: " + s.elapse.media + "초 / 비교 격차: <span class='text-danger' style='font-size: 120%'>"+Math.abs(s.elapse.sys - s.elapse.media).toFixed(3)+"</span>초";
+            buffered.innerHTML = "현재 위치 : "+s.mse.position.toFixed(3) + " 초<p/>";
+
+            if(s.mse.live) {
+
+                var obj = document.createElement('div');
+                obj.className = 'progress-bar progress-bar-striped progress-bar-info';
+                obj.style = 'width:70%;';
+                bufprog.appendChild(obj);
+            }
+
+            if(s.mse.buffered.audio.length > 0) {
+
+                buffered.innerHTML = buffered.innerHTML + "<p/><p/>오디오 버퍼(초)";
+
+                for(var i = 0; i < s.mse.buffered.audio.length; i++) {
+
+                    var ar = false;
+                    if(s.mse.buffered.audio[i].start <= s.mse.position && s.mse.position < s.mse.buffered.audio[i].end) {
+
+                        if(s.mse.buffered.video.length == 0) frontBuf.innerText = ""+ (s.mse.buffered.audio[i].end - s.mse.position).toFixed(3);
+                        ar = true;
+                    }
+
+                    if(s.mse.live) {
+
+                        if(s.mse.buffered.audio[i].start > ms) ms = s.mse.buffered.audio[i].start;
+                        if(s.mse.buffered.audio[i].end > me) me = s.mse.buffered.audio[i].end;
+
+                    } else if(s.mse.buffered.video.length == 0) {
+
+                        var w = Math.round((s.mse.buffered.audio[i].end - s.mse.buffered.audio[i].start) * bpw / s.mse.duration);
+                        var x = Math.round(s.mse.buffered.audio[i].start * bpw / s.mse.duration);
+
+                        if(x < 0) x = 0;
+                        x += bpx;
+
+                        var obj = document.createElement('div');
+                        obj.className = 'progress-bar progress-bar-striped progress-bar-'+(ar ? 'success':'info');
+                        obj.style = "position:absolute; width:"+w+"px; height:"+bph+"px; left:"+x+"px";
+                        bufprog.appendChild(obj);
+                    }
+
+                    buffered.innerHTML = buffered.innerHTML + (ar ? "<span class='text-danger'>" : "") + "#"+(i+1)+" ["+s.mse.buffered.audio[i].start.toFixed(3)+" ~ "+s.mse.buffered.audio[i].end.toFixed(3)+"]<br/>" + (ar ? "</span>" : "");
+                }
+            }
+
+            if(s.mse.buffered.video.length > 0) {
+
+                buffered.innerHTML = buffered.innerHTML + "<p/><p/>비디오 버퍼(초)";
+
+                for(var i = 0; i < s.mse.buffered.video.length; i++) {
+
+                    var ar = false;
+                    if(s.mse.buffered.video[i].start <= s.mse.position && s.mse.position < s.mse.buffered.video[i].end) {
+
+                        frontBuf.innerText = ""+ (s.mse.buffered.video[i].end - s.mse.position).toFixed(3);
+                        ar = true;
+                    }
+
+                    if(s.mse.live) {
+
+                        if(s.mse.buffered.video[i].start > ms) ms = s.mse.buffered.video[i].start;
+                        if(s.mse.buffered.video[i].end > me) me = s.mse.buffered.video[i].end;
+
+                    } else {
+
+                        var w = Math.round((s.mse.buffered.video[i].end - s.mse.buffered.video[i].start) * bpw / s.mse.duration);
+                        var x = Math.round(s.mse.buffered.video[i].start * bpw / s.mse.duration);
+
+                        if(x < 0) x = 0;
+                        x += bpx;
+
+                        var obj = document.createElement('div');
+                        obj.className = 'progress-bar progress-bar-striped progress-bar-'+(ar ? 'success':'info');
+                        obj.style = "position:absolute; width:"+w+"px; height:"+bph+"px; left:"+x+"px";
+                        bufprog.appendChild(obj);
+                    }
+
+
+                    buffered.innerHTML = buffered.innerHTML + (ar ? "<span class='text-danger'>" : "") + "#"+(i+1)+" ["+s.mse.buffered.video[i].start.toFixed(3)+" ~ "+s.mse.buffered.video[i].end.toFixed(3)+"]<br/>" + (ar ? "</span>" : "");
+                }
+            }
+
+            if(s.mse.live) {
+
+                var x  = s.mse.position - ms;
+                x = x  * (bpw * 0.7) / (me - ms);
+                if(x < 0) x = 0;
+
+                x += bpx;
+
+                var obj = document.createElement('div');
+                obj.className = 'progress-bar progress-bar-primary';
+                obj.style = "position:absolute; width:1px; height:"+(bph+5)+"px; left:"+x+"px";
+                bufprog.appendChild(obj);
+
+            } else {
+
+                var x = Math.round(s.mse.position * bpw / s.mse.duration);
+                x += bpx;
+
+                var obj = document.createElement('div');
+                obj.className = 'progress-bar progress-bar-primary';
+                obj.style = "position:absolute; width:1px; height:"+(bph+10)+"px; top:"+(bpy-5)+"px; left:"+x+"px";
+                bufprog.appendChild(obj);
+
+                x = Math.round(s.input.pos * bpw / s.mse.duration);
+                x += bpx;
+
+                obj = document.createElement('div');
+                obj.className = 'progress-bar progress-bar-danger';
+                obj.style = "position:absolute; width:1px; height:"+(bph+10)+"px; top:"+(bpy-5)+"px; left:"+x+"px";
+                bufprog.appendChild(obj);
+
+            }
+        }
+
+
+    }, 1000);
+
+    function play(url) {
+
+        if(url === undefined) {
+
+            url = document.getElementById('SUrl').value;
+			
+        }
+
+        var ucfg = {};
+        var brate = document.getElementById('brate');
+        var delay = document.getElementById('delay');
+        var liveResume = document.getElementById('liveResume');
+
+        ucfg.sbBufferRange = { front: 0, back: parseFloat(brate.options[brate.selectedIndex].value), };
+        ucfg.delay = delay.options[delay.selectedIndex].value;
+        ucfg.sbLiveResume = liveResume.options[liveResume.selectedIndex].value;
+
+        document.getElementById('ID3').value = "";
+        sbp.config = ucfg;
+        sbp.open(url);
+    }
+
+
+</script>
+</body>
+</html>
